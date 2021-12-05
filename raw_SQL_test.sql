@@ -165,6 +165,7 @@ WHERE Semester="Summer" AND Year=2021 AND DeptID_id="SBE"
 GROUP BY CreditHour) AS groupbycredit;
 
 
+
 ------WORKED---- IUB AVAILABLE RESOURSCES
 
 
@@ -239,6 +240,8 @@ WHERE s.schoolTitle = "SBE"
 AND semester = "Spring"
 AND YEAR =2021;
 
+
+
 --------------------------- 
 SELECT Year,Semester,SUM(groupbycredit.sum)
 FROM
@@ -261,6 +264,7 @@ WHERE Semester IN ("Spring","AUTUMN","SUMMER") AND Year BETWEEN 2009 AND 2021 AN
 GROUP BY Year,Semester,Credithour) AS groupbycredit
 GROUP BY Year,Semester
 ORDER BY Year, FIELD (Semester,"Spring","Summer","Autumn");
+
 
 
 
