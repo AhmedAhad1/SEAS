@@ -16,68 +16,68 @@ with connection.cursor() as c:
 
 
 def classroom_requirement_course_offer(Sem, Year):
-    #have to change SectionEnrolled -> SectionCapacity
+    #have to change SectionEnrolled -> SectionCapacity->noo neeeedddddd
     with connection.cursor() as cursor:
         cursor.execute('''
         SELECT COUNT(*) AS Sections
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 1 AND 10
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 1 AND 10
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 11 AND 20
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 11 AND 20
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 21 AND 30
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 21 AND 30
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 31 AND 35
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 31 AND 35
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 36 AND 40
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 36 AND 40
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 41 AND 50
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 41 AND 50
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 51 AND 55
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 51 AND 55
         AND semester = "{}"
         AND YEAR ={}
 
         UNION ALL
 
         SELECT COUNT(*)
-        FROM seasapp_section_t 
-        WHERE SectionCapacity BETWEEN 56 AND 65
+        FROM joinedtable 
+        WHERE SectionEnrolled BETWEEN 56 AND 65
         AND semester = "{}"
         AND YEAR ={}
 
@@ -168,43 +168,25 @@ def resources_usage(School, Sem, Year):
         UNION ALL
 
         SELECT AVG(roomCapacity)
-        FROM seasapp_course_t c
-        JOIN seasapp_department_t d
-        ON c.DeptID_id = d.DeptID
-        JOIN seasapp_school_t s
-        ON d.SchoolTitle_id = s.SchoolTitle
-        JOIN seasapp_section_t sec
-        ON c.CourseID = sec.CourseID_id
-        JOIN seasapp_room_t r
-        ON sec.RoomID_id= r.RoomID
+        FROM joinedtable
+        JOIN seasapp_room_t
+        ON RoomID_id= RoomID
         WHERE SchoolTitle_id="{}" AND Semester="{}" AND Year={}
 
         UNION ALL
 
         SELECT AVG(roomCapacity)-Avg(sectionEnrolled) AS difference
-        FROM seasapp_course_t c
-        JOIN seasapp_department_t d
-        ON c.DeptID_id = d.DeptID
-        JOIN seasapp_school_t s
-        ON d.SchoolTitle_id = s.SchoolTitle
-        JOIN seasapp_section_t sec
-        ON c.CourseID = sec.CourseID_id
-        JOIN seasapp_room_t r
-        ON sec.RoomID_id= r.RoomID
+        FROM joinedtable
+        JOIN seasapp_room_t
+        ON RoomID_id= RoomID
         WHERE SchoolTitle_id="{}" AND Semester="{}" AND Year={}
 
         UNION ALL
 
-        SELECT((AVG(roomCapacity)-Avg(sectionEnrolled))/AVG(RoomCapacity))*100 AS percentage
-        FROM seasapp_course_t c
-        JOIN seasapp_department_t d
-        ON c.DeptID_id = d.DeptID
-        JOIN seasapp_school_t s
-        ON d.SchoolTitle_id = s.SchoolTitle
-        JOIN seasapp_section_t sec
-        ON c.CourseID = sec.CourseID_id
-        JOIN seasapp_room_t r
-        ON sec.RoomID_id= r.RoomID
+        SELECT ((AVG(roomCapacity)-Avg(sectionEnrolled))/AVG(RoomCapacity))*100 AS percentage
+        FROM joinedtable
+        JOIN seasapp_room_t 
+        ON RoomID_id= RoomID
         WHERE SchoolTitle_id="{}" AND Semester="{}" AND Year={}
 
         '''.format(School, Sem, Year, School, Sem, Year, School, Sem, Year, School, Sem, Year, School, Sem, Year))
@@ -244,13 +226,28 @@ def iub_revenue(Yearfrom, Yearto, School):
         '''.format(Yearfrom, Yearto, School))
 
         col = cursor.fetchall()
-        # t1 = []
-        # t2 = []
-        # t3 = []
-        # for i in col:
-        #     #e = [item for t in i for item in t]
-        #     t1.append[i[0]]
+
     return col
+
+
+def iub_revenue_total(Yearfrom, Yearto):
+    with connection.cursor() as cursor:
+        cursor.execute('''
+        SELECT Year,Semester,SUM(groupbycredit.sum)
+        FROM
+            (
+                SELECT COUNT(*),credithour, SUM( SectionEnrolled), credithour*SUM( SectionEnrolled) AS sum, Semester,year
+                FROM joinedtable
+                WHERE Semester IN ("Spring","AUTUMN","SUMMER") AND Year BETWEEN {} AND {} AND SchoolTitle_id IN ('SBE', 'SELS', 'SETS', 'SLASS', 'SPPH')
+                GROUP BY Year,Semester,Credithour
+            ) AS groupbycredit
+        GROUP BY Year,Semester
+        ORDER BY Year, FIELD (Semester,"Spring","Summer","Autumn");
+        '''.format(Yearfrom, Yearto))
+
+        row = cursor.fetchall()
+
+    return row
 
 
 def SETS_revenue(Yearfrom, Yearto, Dept):
@@ -267,6 +264,20 @@ def SETS_revenue(Yearfrom, Yearto, Dept):
         GROUP BY Year,Semester
         ORDER BY Year, FIELD (Semester,"Spring","Summer","Autumn");
         '''.format(Yearfrom, Yearto, Dept))
+
+        col = cursor.fetchall()
+
+    return col
+
+
+def roomsizelist():
+    with connection.cursor() as cursor:
+        cursor.execute('''
+        SELECT roomcapacity,COUNT(roomcapacity)
+        FROM seasapp_room_t
+        GROUP BY roomcapacity
+        ORDER BY roomcapacity;
+        ''')
 
         col = cursor.fetchall()
 

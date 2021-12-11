@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import datascriptRevenue as rev
 import datascriptTallySheet as tallysheet
+from django.core.exceptions import ObjectDoesNotExist
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seas.settings")
 
@@ -20,17 +21,19 @@ Room_T.objects.all().delete()
 Section_T.objects.all().delete()
 
 # Reading data from revenue excel
-dft1 = tallysheet.populatedata('Autumn', '2020')
-dft2 = tallysheet.populatedata('Autumn', '2021')
-dft3 = tallysheet.populatedata('Spring', '2020')
-dft4 = tallysheet.populatedata('Spring', '2021')
-dft5 = tallysheet.populatedata('Summer', '2021')
+dft1 = tallysheet.populatedata('Spring', '2021')
+dft2 = tallysheet.populatedata('Summer', '2021')
 dfr = rev.populate('Revenue.xlsx', 'Data')
+dft4 = tallysheet.populatedata('Autumn', '2020')
+dft3 = tallysheet.populatedata('Autumn', '2021')
+dft5 = tallysheet.populatedata('Spring', '2020')
+
+
 
 dfr = dfr.rename(columns={"RoomSize": "ROOM_CAPACITY",
                  "Sec": "SECTION", "CourseID": "COFFER_COURSE_ID", "stuNo": "ENROLLED", "Crs": "CREDIT_HOUR", "size": "CAPACITY"})
 
-dataframes=[dft1,dft2,dft3,dft4,dft5,dfr]
+dataframes = [dft1, dft2, dfr,dft3, dft4, dft5]
 dfconcat = pd.concat(dataframes)
 dfconcat = dfconcat.astype(object).where(pd.notnull(dfconcat), None)
 
@@ -95,14 +98,14 @@ for k in offered_cooffered_list:
 
 
 
-#Room_T
-    #df = df.drop_duplicates(subset=["ROOM_ID"])
-dfroom = dfconcat[["ROOM_ID", "ROOM_CAPACITY"]]
-data = dfroom.values.tolist()
-for i in data[0:]:
-    if pd.isna(i[0]) == False:
-        room = Room_T(RoomID=i[0], RoomCapacity=i[1])
-        room.save()
+# #Room_T
+#     #df = df.drop_duplicates(subset=["ROOM_ID"])
+# dfroom = dfconcat[["ROOM_ID", "ROOM_CAPACITY"]]
+# data = dfroom.values.tolist()
+# for i in data[0:]:
+#     if pd.isna(i[0]) == False:
+#         room = Room_T(RoomID=i[0], RoomCapacity=i[1])
+#         room.save()
 
 
 
@@ -118,7 +121,10 @@ for i in data:
     if pd.isna(i[3])==False:
         secidpk=str(int(i[0])) + " " +i[3]+" "+i[1]+" "+str(int(i[2]))
         courseIDfk=Course_T.objects.get(pk=i[3])
-        rooomIDfk=Room_T.objects.get(pk=i[10])
+        try:
+            rooomIDfk=Room_T.objects.get(pk=i[10])
+        except ObjectDoesNotExist:
+            rooomIDfk=None
 
         if str(i[6]).find('B') == 0 or str(i[6]).find('b') == 0:
             i[6] = 'B'
