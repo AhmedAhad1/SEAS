@@ -14,7 +14,7 @@
     <div class="col-12">
         <div class="card card-chart">
             <div class="card-header ">
-                <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-primary"></i>Revenue of IUB
+                <h3 class="card-title"><i class="tim-icons icon-money-coins text-primary"></i>Revenue of IUB
                 </h3>
             </div>
         </div>
@@ -79,7 +79,8 @@
             <div class="card-body">
                 <table class="table table-bordered table-striped " style="text-align: center;">
                     <thead style="background-color:#007FFF;">
-                        <th colspan="{{rowsize}}" style="background-color:#66abe4">
+                        <th colspan="100%" style="background-color:#66abe4"> 
+                            <!-- colspan="100%" auto colspan -->
                             <h4>The raw data of</h4>
                         </th>
                         <tr>
@@ -116,22 +117,9 @@
     var search = {{ search }}
 
     if (search == 1) {
-        document.getElementById("chart").style.display = "none";
+        document.getElementById("table").style.display = "none";
     }
 </script>
-<script>
-
-    var ctx = document.getElementById("linechart").getContext("2d");
-    colors = ['#00FFFF', '#A52A2A', '#7FFF00', '#5F9EA0', '#6495ED', '#A9A9A9', '#FF69B4', '#0000FF', '#006D77']
-
-    revenue = {{ revenue | safe }}
-    revenuelabel = {{ revenuesemyear | safe }}
-    selectedschool = {{ selectedschool | safe }}
-
-
-
-</script>
-
 
 
 {% endblock javascripts %}
